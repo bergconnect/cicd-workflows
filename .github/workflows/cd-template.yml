@@ -17,6 +17,16 @@ on:
         required: false
         default: 'beheerder'
         type: string
+      dest-registry-host:
+        description: 'Registry-host productie (kopie-bestemming)'
+        required: false
+        default: '192.168.2.100:3003'
+        type: string
+      dest-repository:
+        description: 'Repository-namespace op productie-registry'
+        required: false
+        default: 'beheerder'
+        type: string
       base-image:
         description: 'Runtime base-image voor dotnet publish'
         required: false
@@ -47,6 +57,8 @@ on:
         required: true
       GH_PAT:
         required: true
+      GITEA_DST_TOKEN:
+        required: false
 
 env:
   DOTNET_INSTALL_DIR: ${{ github.workspace }}/.dotnet
@@ -317,9 +329,41 @@ jobs:
           && echo "proceed=true" >> "$GITHUB_OUTPUT"
           || echo "proceed=false" >> "$GITHUB_OUTPUT"
 
+      - name: Copy image to productie registry
+        id: copy-image
+        if: steps.gate.outputs.proceed == 'true'
+        env:
+          XDG_RUNTIME_DIR: ${{ runner.temp }}/runtime
+          SRC_CREDS: ${{ vars.GITEA_USER }}:${{ secrets.GITEA_TOKEN }}
+          DST_CREDS: ${{ vars.GITEA_USER }}:${{ secrets.GITEA_DST_TOKEN }}
+          DST_REGISTRY: ${{ inputs.dest-registry-host }}
+          DST_REPOSITORY: ${{ inputs.dest-repository }}
+          DST_TOKEN_SET: ${{ secrets.GITEA_DST_TOKEN != '' }}
+        run: >
+          mkdir -p "$XDG_RUNTIME_DIR";
+          if [ "$DST_TOKEN_SET" != "true" ]; then
+          echo "::error::GITEA_DST_TOKEN ontbreekt"; exit 1; fi;
+          SRC="$REGISTRY/$REPOSITORY/$IMAGE_NAME:$VER";
+          DST="$DST_REGISTRY/$DST_REPOSITORY/$IMAGE_NAME:$VER";
+          SRC_URL="docker://$SRC";
+          DST_URL="docker://$DST";
+          skopeo copy --src-tls-verify=false --dest-tls-verify=false
+          --src-creds "$SRC_CREDS" --dest-creds "$DST_CREDS"
+          "$SRC_URL" "$DST_URL";
+          SRC_DIGEST=$(skopeo inspect --tls-verify=false
+          --creds "$SRC_CREDS" "$SRC_URL" | jq -r .Digest);
+          DST_DIGEST=$(skopeo inspect --tls-verify=false
+          --creds "$DST_CREDS" "$DST_URL" | jq -r .Digest);
+          if [ -z "$SRC_DIGEST" ] || [ "$SRC_DIGEST" != "$DST_DIGEST" ];
+          then echo "::error::Digest-mismatch na kopie ($SRC_DIGEST vs
+          $DST_DIGEST)"; exit 1; fi;
+          echo "Gekopieerd + geverifieerd: $DST @$DST_DIGEST"
+
       - name: Promote productie tag via composite
         id: promote
-        if: steps.gate.outputs.proceed == 'true'
+        if: >
+          steps.gate.outputs.proceed == 'true' &&
+          steps.copy-image.outcome == 'success'
         uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v2
         with:
           project: ${{ matrix.release.project }}
