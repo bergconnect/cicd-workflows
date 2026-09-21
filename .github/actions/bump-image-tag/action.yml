@@ -1,8 +1,8 @@
 name: 'Bump image tag'
 # LESSEN (niet verwijderen bij refactor):
-# - run: > (NOOIT run: | met multi-line $(...) — newline = separator, exit 127)
-# - Geen top-level concurrency op callers; inputs-defaults op push; matrix-guards.
-# - Composites erven geen secrets (inputs); export vóór strenv(); yq -r; diff-guards.
+# - run: > (NOOIT run: | met multi-line $(...): newline = scheiding, exit 127)
+# - Geen top-level concurrency op callers; inputs-defaults; matrix-guards.
+# - Composites erven geen secrets; export voor strenv(); yq -r; diff-guards.
 description: >
   Bumpt image.tag in .infra/<chart>/values-<env>.yaml naar een versie,
   commit + push op een branch, opent een PR (met bestaande-PR-fallback) en

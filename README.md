@@ -26,3 +26,8 @@ Callers pinnen een tag, bv.:
 4. Tag `vMAJOR.MINOR` (major bij breaking inputs/outputs, anders minor) en
    GitHub Release met dezelfde naam. Templates + actions releasen ALTIJD
    samen; action-refs in templates wijzen naar dezelfde tag.
+
+## Bekende lint-uitzondering
+
+Twee `uses:`-regels (centrale action-refs) zijn 83 tekens en kunnen niet
+vouwen zonder YAML-semantiek te breken — geaccepteerd, niet fixen.

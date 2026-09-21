@@ -1,8 +1,8 @@
 name: 'Detect changed projects'
 # LESSEN (niet verwijderen bij refactor):
-# - run: > (NOOIT run: | met multi-line $(...) — newline = separator, exit 127)
-# - Geen top-level concurrency op callers; inputs-defaults op push; matrix-guards.
-# - Composites erven geen secrets (inputs); export vóór strenv(); yq -r; diff-guards.
+# - run: > (NOOIT run: | met multi-line $(...): newline = scheiding, exit 127)
+# - Geen top-level concurrency op callers; inputs-defaults; matrix-guards.
+# - Composites erven geen secrets; export voor strenv(); yq -r; diff-guards.
 description: >
   Classificeert gewijzigde bestanden naar projecten via de expliciete
   paths-mapping in .github/projects.json (per project paths + test-paths,
