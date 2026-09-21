@@ -6,7 +6,7 @@ name: 'Bump image tag'
 description: >
   Bumpt image.tag in .infra/<chart>/values-<env>.yaml naar een versie,
   commit + push op een branch, opent een PR (met bestaande-PR-fallback) en
-  schakelt auto-merge in. Eén implementatie voor devtest-, acceptatie- en
+  schakelt auto-merge in. Eén implementatie voor devtest- en
   productie-legs en de handmatige promoot-flow.
 
 inputs:
@@ -14,7 +14,7 @@ inputs:
     description: 'Project-key uit .github/projects.json (bv. Api)'
     required: true
   env-name:
-    description: 'Omgeving: devtest, acceptatie of productie'
+    description: 'Omgeving: devtest of productie'
     required: true
   version:
     description: 'Image-versie (SemVer2, bv. 0.1.77)'
@@ -38,10 +38,6 @@ inputs:
   token:
     description: 'GH_PAT als input (composites erven geen secrets)'
     required: true
-  require-sequence:
-    description: "'true' eist acceptatie al op version (productie)"
-    required: false
-    default: 'false'
 
 outputs:
   changed:
@@ -64,7 +60,6 @@ runs:
         PROJECT: ${{ inputs.project }}
         ENV_NAME: ${{ inputs.env-name }}
         VERSION: ${{ inputs.version }}
-        REQUIRE_SEQUENCE: ${{ inputs.require-sequence }}
       run: >
         CHART=$(jq -r --arg p "$PROJECT"
         '.[$p].chart // empty' .github/projects.json);
@@ -72,21 +67,6 @@ runs:
         echo "::error::Onbekend project '$PROJECT' — voeg een entry
         toe aan .github/projects.json"; exit 1; fi;
         export TAG="$VERSION";
-        if [ "$REQUIRE_SEQUENCE" = "true" ]; then
-        ACC=""; ATTEMPTS=20;
-        while [ "$ATTEMPTS" -gt 0 ]; do
-        git fetch origin main --quiet 2>/dev/null || true;
-        ACC="$(git show origin/main:.infra/$CHART/values-acceptatie.yaml
-        2>/dev/null | yq -r '.image.tag // ""' || true)";
-        if [ "$ACC" = "$TAG" ]; then break; fi;
-        ATTEMPTS=$((ATTEMPTS - 1));
-        if [ "$ATTEMPTS" -gt 0 ]; then
-        echo "Wacht op acceptatie $TAG (nu: $ACC, nog $ATTEMPTS min)";
-        sleep 60; fi; done;
-        if [ "$ACC" != "$TAG" ]; then
-        echo "::error::Sequentie-schending: acceptatie staat op
-        $ACC, gevraagd $TAG voor productie (20 min gewacht)";
-        exit 1; fi; fi;
         FILE=".infra/$CHART/values-$ENV_NAME.yaml";
         CURRENT="$(yq -r '.image.tag // ""' "$FILE")";
         if [ "$CURRENT" = "$TAG" ]; then
