@@ -257,8 +257,8 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           require-sequence: 'false'
 
-  promote-acceptatie:
-    name: Promote acceptatie
+  promote-productie:
+    name: Promote productie
     runs-on: [self-hosted]
     needs: [update-tag, detect]
     if: >
@@ -268,89 +268,8 @@ jobs:
       (      needs.update-tag.result == 'success' ||
       needs.update-tag.result == 'skipped') &&
       (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'acceptatie' ||
       inputs.dispatch-environment == 'productie')
-    timeout-minutes: 30
-    permissions:
-      contents: write
-      pull-requests: write
-    environment: acceptatie
-    concurrency:
-      group: cd-promote-${{ matrix.release.project }}-acceptatie
-      cancel-in-progress: true
-    strategy:
-      fail-fast: false
-      matrix:
-        release: ${{ fromJSON(needs.detect.outputs.matrix) }}
-    env:
-      PROJECT: ${{ matrix.release.project }}
-      IMAGE_NAME: ${{ matrix.release.image }}
-      REGISTRY: ${{ inputs.registry-host || 'go.berg-connect.nl' }}
-      REPOSITORY: ${{ inputs.repository || 'beheerder' }}
-    steps:
-      - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v1
-        with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
-          fetch-depth: 0
-          token: ${{ secrets.GH_PAT }}
-          restore-tools: 'true'
-
-      - name: Determine version
-        env:
-          DISPATCH_VERSION: ${{ inputs.dispatch-version }}
-        run: >
-          if [ -n "$DISPATCH_VERSION" ]; then
-          VER="$DISPATCH_VERSION"; else VER=$(cd "src/$PROJECT" && dotnet nbgv
-          get-version -v SemVer2); fi;
-          echo "VER=$VER" >> "$GITHUB_ENV";
-          echo "Version $VER for $PROJECT";
-          [ -n "$VER" ] ||
-          { echo "::error::Lege versie voor $PROJECT"; exit 1; }
-
-      - name: Check published image exists
-        id: gate
-        run: >
-          IMAGE="$REGISTRY/$REPOSITORY/$IMAGE_NAME";
-          skopeo inspect --tls-verify=false --raw
-          --creds "${{ vars.GITEA_USER }}:${{ secrets.GITEA_TOKEN }}"
-          docker://$IMAGE:$VER > /dev/null 2>&1
-          && echo "proceed=true" >> "$GITHUB_OUTPUT"
-          || echo "proceed=false" >> "$GITHUB_OUTPUT"
-
-      - name: Promote acceptatie tag via composite
-        id: promote
-        if: steps.gate.outputs.proceed == 'true'
-        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v1
-        with:
-          project: ${{ matrix.release.project }}
-          env-name: acceptatie
-          version: ${{ env.VER }}
-          image-name: ${{ matrix.release.image }}
-          branch: "ci/promote-${{ matrix.release.project }}-\
-            acceptatie-${{ env.VER }}"
-          commit-message: "ci: promote ${{ matrix.release.image }} \
-            acceptatie to ${{ env.VER }}"
-          pr-title: "ci: promote ${{ matrix.release.image }} \
-            acceptatie to ${{ env.VER }}"
-          pr-body: Automated promotion of freshly published
-            image ${{ github.sha }} to acceptatie.
-          token: ${{ secrets.GH_PAT }}
-          require-sequence: 'false'
-
-  promote-productie:
-    name: Promote productie
-    runs-on: [self-hosted]
-    needs: [promote-acceptatie, detect]
-    if: >
-      always() &&
-      needs.detect.outputs.matrix != '' &&
-      needs.detect.outputs.matrix != '[]' &&
-      (      needs.promote-acceptatie.result == 'success' ||
-      needs.promote-acceptatie.result == 'skipped') &&
-      (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'productie')
-    timeout-minutes: 30
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -416,4 +335,3 @@ jobs:
           pr-body: Automated promotion of freshly published
             image ${{ github.sha }} to productie.
           token: ${{ secrets.GH_PAT }}
-          require-sequence: 'true'
