@@ -89,7 +89,7 @@ jobs:
 
       - name: Classify changed paths
         id: classify
-        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v1
+        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v2
         with:
           files: ${{ steps.diff.outputs.files }}
           match-tests: 'false'
@@ -146,7 +146,7 @@ jobs:
       BASE_IMAGE: ${{ inputs.base-image }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v1
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v2
         with:
           dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           fetch-depth: 0
@@ -209,7 +209,7 @@ jobs:
       REPOSITORY: ${{ inputs.repository || 'beheerder' }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v1
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v2
         with:
           dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           fetch-depth: 0
@@ -241,7 +241,7 @@ jobs:
       - name: Bump devtest tag via composite
         id: promote
         if: steps.gate.outputs.proceed == 'true'
-        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v1
+        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v2
         with:
           project: ${{ matrix.release.project }}
           env-name: devtest
@@ -288,7 +288,7 @@ jobs:
       REPOSITORY: ${{ inputs.repository || 'beheerder' }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v1
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v2
         with:
           dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           fetch-depth: 0
@@ -320,7 +320,7 @@ jobs:
       - name: Promote productie tag via composite
         id: promote
         if: steps.gate.outputs.proceed == 'true'
-        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v1
+        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v2
         with:
           project: ${{ matrix.release.project }}
           env-name: productie
