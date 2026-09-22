@@ -4,7 +4,8 @@ name: 'Bump image tag'
 # - Geen top-level concurrency op callers; inputs-defaults; matrix-guards.
 # - Composites erven geen secrets; export voor strenv(); yq -r; diff-guards.
 description: >
-  Bumpt image.tag in .infra/<chart>/values-<env>.yaml naar een versie,
+  Bumpt image.tag in .infra/<chart>/values_dev.yaml of values_prod.yaml
+  naar een versie,
   commit + push op een branch, opent een PR (met bestaande-PR-fallback) en
   schakelt auto-merge in. Eén implementatie voor devtest- en
   productie-legs en de handmatige promoot-flow.
@@ -67,7 +68,12 @@ runs:
         echo "::error::Onbekend project '$PROJECT' — voeg een entry
         toe aan .github/projects.json"; exit 1; fi;
         export TAG="$VERSION";
-        FILE=".infra/$CHART/values-$ENV_NAME.yaml";
+        case "$ENV_NAME" in
+        devtest) VALUES_FILE="values_dev.yaml";;
+        productie) VALUES_FILE="values_prod.yaml";;
+        *) echo "::error::Onbekende omgeving '$ENV_NAME'"; exit 1;;
+        esac;
+        FILE=".infra/$CHART/$VALUES_FILE";
         CURRENT="$(yq -r '.image.tag // ""' "$FILE")";
         if [ "$CURRENT" = "$TAG" ]; then
         echo "Tag al actueel — geen wijziging";
@@ -87,7 +93,12 @@ runs:
       run: >
         CHART=$(jq -r --arg p "$PROJECT"
         '.[$p].chart // empty' .github/projects.json);
-        FILE=".infra/$CHART/values-$ENV_NAME.yaml";
+        case "$ENV_NAME" in
+        devtest) VALUES_FILE="values_dev.yaml";;
+        productie) VALUES_FILE="values_prod.yaml";;
+        *) echo "::error::Onbekende omgeving '$ENV_NAME'"; exit 1;;
+        esac;
+        FILE=".infra/$CHART/$VALUES_FILE";
         git config user.name "gitea-actions[bot]";
         git config user.email "gitea-actions[bot]@users.noreply.gitea";
         git switch -C "$BRANCH";
