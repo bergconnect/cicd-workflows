@@ -39,6 +39,12 @@ inputs:
   token:
     description: 'GH_PAT als input (composites erven geen secrets)'
     required: true
+  gpg-key:
+    description: 'Private GPG-ondertekenkey als input (composites erven geen secrets)'
+    required: true
+  key-id:
+    description: 'Fingerprint voor user.signingkey (expliciet, geen afleiding)'
+    required: true
 
 outputs:
   changed:
@@ -80,6 +86,22 @@ runs:
         echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi;
         yq -i '.image.tag = strenv(TAG)' "$FILE";
         echo "changed=true" >> "$GITHUB_OUTPUT"
+
+    - name: Import signing key
+      id: signing
+      shell: bash
+      env:
+        GPG_KEY: ${{ inputs.gpg-key }}
+        KEY_ID: ${{ inputs.key-id }}
+      run: >
+        echo "$GPG_KEY" | gpg --batch --import;
+        git config user.signingkey "$KEY_ID";
+        git config commit.gpgsign true;
+        [ "$(git config commit.gpgsign)" = "true" ] ||
+        { echo "::error::gpgsign niet actief"; exit 1; };
+        [ -n "$(git config user.signingkey)" ] ||
+        { echo "::error::signingkey leeg"; exit 1; };
+        echo "Signing geconfigureerd"
 
     - name: Commit and push
       id: commit
