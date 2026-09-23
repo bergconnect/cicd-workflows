@@ -40,7 +40,7 @@ inputs:
     description: 'GH_PAT als input (composites erven geen secrets)'
     required: true
   gpg-key:
-    description: 'Private GPG-ondertekenkey als input (composites erven geen secrets)'
+    description: 'Private GPG-key als input (geen secret-erving)'
     required: true
   key-id:
     description: 'Fingerprint voor user.signingkey (expliciet, geen afleiding)'
