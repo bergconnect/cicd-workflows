@@ -18,12 +18,12 @@ on:
         default: 'beheerder'
         type: string
       dest-registry-host:
-        description: 'Registry-host productie (kopie-bestemming)'
+        description: 'Registry-host prd (kopie-bestemming)'
         required: false
         default: '192.168.2.100:3003'
         type: string
       dest-repository:
-        description: 'Repository-namespace op productie-registry'
+        description: 'Repository-namespace op prd-registry'
         required: false
         default: 'beheerder'
         type: string
@@ -246,7 +246,7 @@ jobs:
       needs.detect.outputs.matrix != '' &&
       needs.detect.outputs.matrix != '[]' &&
       (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'devtest') &&
+      inputs.dispatch-environment == 'dev') &&
       needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
@@ -288,28 +288,28 @@ jobs:
           && echo "proceed=true" >> "$GITHUB_OUTPUT"
           || echo "proceed=false" >> "$GITHUB_OUTPUT"
 
-      - name: Bump devtest tag via composite
+      - name: Bump dev tag via composite
         id: promote
         if: steps.gate.outputs.proceed == 'true'
         uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v3
         with:
           project: ${{ matrix.release.project }}
-          env-name: devtest
+          env-name: dev
           version: ${{ env.VER }}
           image-name: ${{ matrix.release.image }}
           branch: ci/image-tag-update-${{ matrix.release.image }}
           commit-message: "ci: update ${{ matrix.release.image }} \
-            devtest tag to ${{ env.VER }}"
+            dev tag to ${{ env.VER }}"
           pr-title: "ci: update image tag \
-            ${{ matrix.release.image }}:${{ env.VER }} to devtest"
+            ${{ matrix.release.image }}:${{ env.VER }} to dev"
           pr-body: Automated tag update for freshly published image
             ${{ github.sha }}.
           token: ${{ secrets.GH_PAT }}
           gpg-key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
           key-id: ${{ vars.BOT_GPG_KEYID }}
 
-  promote-productie:
-    name: Promote productie
+  promote-prd:
+    name: Promote prd
     runs-on: [self-hosted]
     needs: [update-tag, detect, determine-version]
     if: >
@@ -319,15 +319,15 @@ jobs:
       (      needs.update-tag.result == 'success' ||
       needs.update-tag.result == 'skipped') &&
       (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'productie') &&
+      inputs.dispatch-environment == 'prd') &&
       needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
-    environment: productie
+    environment: prd
     concurrency:
-      group: cd-promote-${{ matrix.release.project }}-productie
+      group: cd-promote-${{ matrix.release.project }}-prd
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -365,7 +365,7 @@ jobs:
           && echo "proceed=true" >> "$GITHUB_OUTPUT"
           || echo "proceed=false" >> "$GITHUB_OUTPUT"
 
-      - name: Copy image to productie registry
+      - name: Copy image to prd registry
         id: copy-image
         if: steps.gate.outputs.proceed == 'true'
         env:
@@ -395,7 +395,7 @@ jobs:
           $DST_DIGEST)"; exit 1; fi;
           echo "Gekopieerd + geverifieerd: $DST @$DST_DIGEST"
 
-      - name: Promote productie tag via composite
+      - name: Promote prd tag via composite
         id: promote
         if: >
           steps.gate.outputs.proceed == 'true' &&
@@ -403,17 +403,17 @@ jobs:
         uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v3
         with:
           project: ${{ matrix.release.project }}
-          env-name: productie
+          env-name: prd
           version: ${{ env.VER }}
           image-name: ${{ matrix.release.image }}
           branch: "ci/promote-${{ matrix.release.project }}-\
-            productie-${{ env.VER }}"
+            prd-${{ env.VER }}"
           commit-message: "ci: promote ${{ matrix.release.image }} \
-            productie to ${{ env.VER }}"
+            prd to ${{ env.VER }}"
           pr-title: "ci: promote ${{ matrix.release.image }} \
-            productie to ${{ env.VER }}"
+            prd to ${{ env.VER }}"
           pr-body: Automated promotion of freshly published
-            image ${{ github.sha }} to productie.
+            image ${{ github.sha }} to prd.
           token: ${{ secrets.GH_PAT }}
           gpg-key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
           key-id: ${{ vars.BOT_GPG_KEYID }}
