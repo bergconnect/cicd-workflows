@@ -137,10 +137,50 @@ jobs:
           done;
           echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
 
+  determine-version:
+    name: Determine versions
+    runs-on: [self-hosted]
+    needs: [detect]
+    if: >
+      needs.detect.outputs.matrix != '' &&
+      needs.detect.outputs.matrix != '[]'
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      versions: ${{ steps.resolve.outputs.versions }}
+    steps:
+      - name: Set up .NET
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v3
+        with:
+          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+          restore-tools: 'true'
+
+      - name: Resolve versions
+        id: resolve
+        env:
+          MATRIX: ${{ needs.detect.outputs.matrix }}
+          DISPATCH_VERSION: ${{ inputs.dispatch-version }}
+        run: >
+          VERSIONS="{}";
+          for P in $(echo "$MATRIX" | jq -r '.[].project'); do
+          if [ -n "$DISPATCH_VERSION" ]; then VER="$DISPATCH_VERSION";
+          else VER=$(cd "src/$P" && dotnet nbgv get-version -v SemVer2);
+          fi;
+          if [ -z "$VER" ]; then
+          echo "::error::Lege versie voor $P"; exit 1; fi;
+          echo "Version $VER for $P";
+          VERSIONS=$(echo "$VERSIONS" | jq -c --arg p "$P"
+          --arg v "$VER" '. + {($p): $v}');
+          done;
+          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
+
   publish:
     name: Publish image
     runs-on: [self-hosted]
-    needs: [detect]
+    needs: [detect, determine-version]
     if: >
       needs.detect.outputs.matrix != '' &&
       needs.detect.outputs.matrix != '[]' &&
@@ -167,13 +207,12 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           restore-tools: 'true'
 
-      - name: Determine version
+      - name: Set version
         env:
-          DISPATCH_VERSION: ${{ inputs.dispatch-version }}
+          VER_MAP: ${{ needs.determine-version.outputs.versions }}
         run: >
-          if [ -n "$DISPATCH_VERSION" ]; then
-          VER="$DISPATCH_VERSION"; else VER=$(cd "src/$PROJECT" && dotnet nbgv
-          get-version -v SemVer2); fi;
+          VER=$(echo "$VER_MAP" | jq -r --arg p "$PROJECT"
+          '.[$p] // empty');
           echo "VER=$VER" >> "$GITHUB_ENV";
           echo "Version $VER for $PROJECT"
 
@@ -201,13 +240,14 @@ jobs:
   update-tag:
     name: Update image tag
     runs-on: [self-hosted]
-    needs: [publish, detect]
+    needs: [publish, detect, determine-version]
     if: >
       always() &&
       needs.detect.outputs.matrix != '' &&
       needs.detect.outputs.matrix != '[]' &&
       (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'devtest')
+      inputs.dispatch-environment == 'devtest') &&
+      needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
       contents: write
@@ -221,22 +261,18 @@ jobs:
       IMAGE_NAME: ${{ matrix.release.image }}
       REGISTRY: ${{ inputs.registry-host || 'go.berg-connect.nl' }}
       REPOSITORY: ${{ inputs.repository || 'beheerder' }}
+      VER_MAP: ${{ needs.determine-version.outputs.versions }}
     steps:
-      - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v3
+      - name: Check out code
+        uses: actions/checkout@v4
         with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
-          fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
-          restore-tools: 'true'
+          fetch-depth: 0
 
-      - name: Determine version
-        env:
-          DISPATCH_VERSION: ${{ inputs.dispatch-version }}
+      - name: Set version
         run: >
-          if [ -n "$DISPATCH_VERSION" ]; then
-          VER="$DISPATCH_VERSION"; else VER=$(cd "src/$PROJECT" && dotnet nbgv
-          get-version -v SemVer2); fi;
+          VER=$(echo "$VER_MAP" | jq -r --arg p "$PROJECT"
+          '.[$p] // empty');
           echo "VER=$VER" >> "$GITHUB_ENV";
           echo "Version $VER for $PROJECT";
           [ -n "$VER" ] ||
@@ -276,7 +312,7 @@ jobs:
   promote-productie:
     name: Promote productie
     runs-on: [self-hosted]
-    needs: [update-tag, detect]
+    needs: [update-tag, detect, determine-version]
     if: >
       always() &&
       needs.detect.outputs.matrix != '' &&
@@ -284,7 +320,8 @@ jobs:
       (      needs.update-tag.result == 'success' ||
       needs.update-tag.result == 'skipped') &&
       (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'productie')
+      inputs.dispatch-environment == 'productie') &&
+      needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
       contents: write
@@ -302,22 +339,18 @@ jobs:
       IMAGE_NAME: ${{ matrix.release.image }}
       REGISTRY: ${{ inputs.registry-host || 'go.berg-connect.nl' }}
       REPOSITORY: ${{ inputs.repository || 'beheerder' }}
+      VER_MAP: ${{ needs.determine-version.outputs.versions }}
     steps:
-      - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v3
+      - name: Check out code
+        uses: actions/checkout@v4
         with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
-          fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
-          restore-tools: 'true'
+          fetch-depth: 0
 
-      - name: Determine version
-        env:
-          DISPATCH_VERSION: ${{ inputs.dispatch-version }}
+      - name: Set version
         run: >
-          if [ -n "$DISPATCH_VERSION" ]; then
-          VER="$DISPATCH_VERSION"; else VER=$(cd "src/$PROJECT" && dotnet nbgv
-          get-version -v SemVer2); fi;
+          VER=$(echo "$VER_MAP" | jq -r --arg p "$PROJECT"
+          '.[$p] // empty');
           echo "VER=$VER" >> "$GITHUB_ENV";
           echo "Version $VER for $PROJECT";
           [ -n "$VER" ] ||
