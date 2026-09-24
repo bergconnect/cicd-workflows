@@ -307,7 +307,6 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           gpg-key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
           key-id: ${{ vars.BOT_GPG_KEYID }}
-          require-sequence: 'false'
 
   promote-productie:
     name: Promote productie
