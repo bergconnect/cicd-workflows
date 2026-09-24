@@ -13,7 +13,7 @@ Elke consumer-repo levert:
 - Code onder `src/`, tests onder `tests/`, charts onder `.infra/`.
 - GitHub Environment `prd` met required reviewers (dev heeft geen gate).
 - Vars `GITEA_USER` (+ registry-host) en secrets `GITEA_TOKEN`, `GH_PAT`.
-- .NET-config: `global.json`, `version.json` per project (unieke major.minor).
+- .NET-config: `global.json`, `version.json` per project (unieke major.minor); `global.json` is tevens de enige SDK-versiebron.
 
 Callers pinnen een tag, bv.:
 `uses: bergconnect/cicd-workflows/.github/workflows/cd-template.yml@v1`.

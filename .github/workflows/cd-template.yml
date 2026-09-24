@@ -3,6 +3,7 @@ name: CD template
 # - run: > (NOOIT run: | met multi-line $(...): newline = scheiding, exit 127)
 # - Geen top-level concurrency op callers; inputs-defaults; matrix-guards.
 # - Composites erven geen secrets; export voor strenv(); yq -r; diff-guards.
+# - SDK-versiebron = global.json (enige bron; geen dotnet-version-inputs).
 
 on:
   workflow_call:
@@ -31,11 +32,6 @@ on:
         description: 'Runtime base-image voor dotnet publish'
         required: false
         default: 'mcr.microsoft.com/dotnet/aspnet:10.0'
-        type: string
-      dotnet-version:
-        description: '.NET SDK-versie voor setup-dotnet'
-        required: false
-        default: '10.0.x'
         type: string
       dispatch-project:
         description: 'Project-key bij dispatch (leeg = push-pad)'
@@ -153,7 +149,6 @@ jobs:
       - name: Set up .NET
         uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v4
         with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
           restore-tools: 'true'
@@ -202,7 +197,6 @@ jobs:
       - name: Set up .NET
         uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v4
         with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
           restore-tools: 'true'
