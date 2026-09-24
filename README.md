@@ -25,10 +25,12 @@ Callers pinnen een tag, bv.:
 3. Integratiebewijs = groene LearnCICD CI/CD-runs op de consumer-PR.
 4. Tag `vMAJOR.MINOR` (major bij breaking inputs/outputs, anders minor) en
    GitHub Release met dezelfde naam. Templates + actions releasen ALTIJD
-   samen; action-refs in templates wijzen naar dezelfde tag. Verifieer dat
-   laatste expliciet (drie keer gemist vóór v4.1 — dit commando met de
-   nieuwe tag ingevuld moet leeg zijn):
-   `grep -rn "cicd-workflows/.github/actions/" .github/workflows/ | grep -v "@<nieuwe-tag>"`
+    samen; action-refs in templates wijzen naar dezelfde tag. Verifieer dat
+ laatste expliciet (drie keer gemist vóór v4.1 — onderstaand commando
+ met de nieuwe tag ingevuld moet leeg zijn):
+ ```bash
+ grep -rn "cicd-workflows/.github/actions/" .github/workflows/ | grep -v "@<nieuwe-tag>"
+ ```
 
 ## Bekende lint-uitzondering
 
