@@ -1,7 +1,7 @@
 # cicd-workflows
 
 Gedeelde CI/CD-templates en composite actions voor .NET-solutions met
-matrix-builds en GitOps-promotie (devtest → productie).
+matrix-builds en GitOps-promotie (dev → prd).
 
 ## Gebruik (consumer-contract)
 
@@ -11,7 +11,7 @@ Elke consumer-repo levert:
 - `.github/projects.json` met per project `image_name`, `chart`, `paths`,
   `test-paths` plus `_global` (`select-all`, `ignore`).
 - Code onder `src/`, tests onder `tests/`, charts onder `.infra/`.
-- GitHub Environment `productie` met required reviewers.
+- GitHub Environment `prd` met required reviewers (dev heeft geen gate).
 - Vars `GITEA_USER` (+ registry-host) en secrets `GITEA_TOKEN`, `GH_PAT`.
 - .NET-config: `global.json`, `version.json` per project (unieke major.minor).
 
