@@ -3,15 +3,11 @@ name: CI template
 # - run: > (NOOIT run: | met multi-line $(...): newline = scheiding, exit 127)
 # - Geen top-level concurrency op callers; inputs-defaults; matrix-guards.
 # - Composites erven geen secrets; export voor strenv(); yq -r; diff-guards.
+# - SDK-versiebron = global.json (enige bron; geen dotnet-version-inputs).
 
 on:
   workflow_call:
     inputs:
-      dotnet-version:
-        description: '.NET SDK-versie voor setup-dotnet'
-        required: false
-        default: '10.0.x'
-        type: string
 
 env:
   DOTNET_INSTALL_DIR: ${{ github.workspace }}/.dotnet
@@ -83,7 +79,6 @@ jobs:
       - name: Set up .NET
         uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v4
         with:
-          dotnet-version: ${{ inputs.dotnet-version || '10.0.x' }}
           token: ${{ github.token }}
 
       - name: Restore dependencies
