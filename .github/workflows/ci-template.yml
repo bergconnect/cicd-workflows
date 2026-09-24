@@ -44,7 +44,7 @@ jobs:
 
       - name: Classify changed paths
         id: classify
-        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v4
+        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v5
         with:
           files: ${{ steps.diff.outputs.files }}
           match-tests: 'true'
@@ -77,7 +77,7 @@ jobs:
       PROJECT: ${{ matrix.project }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v4
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v5
         with:
           token: ${{ github.token }}
 
