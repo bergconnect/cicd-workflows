@@ -89,6 +89,7 @@ runs:
 
     - name: Import signing key
       id: signing
+      if: steps.bump.outputs.changed == 'true'
       shell: bash
       env:
         GPG_KEY: ${{ inputs.gpg-key }}
