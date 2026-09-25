@@ -122,7 +122,7 @@ jobs:
     name: Copy image to prd registry
     runs-on: [self-hosted]
     needs: [validate]
-    if: inputs.environment == 'prd'
+    if: inputs.environment == 'prd' || inputs.environment == 'acc'
     timeout-minutes: 10
     permissions:
       contents: read
