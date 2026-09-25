@@ -74,7 +74,7 @@ jobs:
 
       - name: Classify changed paths
         id: classify
-        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v11
+        uses: bergconnect/cicd-workflows/.github/actions/detect-changed-projects@v13
         with:
           files: ${{ steps.diff.outputs.files }}
           match-tests: 'false'
@@ -111,7 +111,7 @@ jobs:
       versions: ${{ steps.resolve.outputs.versions }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v11
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v13
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
@@ -155,7 +155,7 @@ jobs:
       BASE_IMAGE: ${{ inputs.base-image }}
     steps:
       - name: Set up .NET
-        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v11
+        uses: bergconnect/cicd-workflows/.github/actions/dotnet-setup@v13
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
@@ -243,7 +243,7 @@ jobs:
       - name: Bump dev tag via composite
         id: promote
         if: steps.gate.outputs.proceed == 'true'
-        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v11
+        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v13
         with:
           project: ${{ matrix.release.project }}
           env-name: dev
