@@ -48,6 +48,13 @@ on:
         required: false
         default: ''
         type: string
+      auto-environments:
+        description: >
+          JSON-lijst van omgevingen die de push-keten automatisch
+          doorloopt (default alleen dev)
+        required: false
+        default: '["dev"]'
+        type: string
     secrets:
       GITEA_TOKEN:
         required: true
@@ -312,8 +319,9 @@ jobs:
       needs.detect.outputs.matrix != '[]' &&
       (      needs.update-tag.result == 'success' ||
       needs.update-tag.result == 'skipped') &&
-      (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'prd') &&
+      (inputs.dispatch-environment == 'prd' ||
+      (inputs.dispatch-environment == '' &&
+      contains(fromJSON(inputs.auto-environments), 'prd'))) &&
       needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
