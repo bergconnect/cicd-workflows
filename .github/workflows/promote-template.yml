@@ -226,11 +226,11 @@ jobs:
           version: ${{ inputs.version }}
           image-name: ${{ needs.validate.outputs.image }}
           branch: "ci/promote-${{ inputs.project }}-\
-            ${{ inputs.environment }}-${{ inputs.version }}"
+            ${{ inputs.version }}-to-${{ inputs.environment }}"
           commit-message: "ci: promote ${{ inputs.project }} \
-            ${{ inputs.environment }} to ${{ inputs.version }}"
+            ${{ inputs.version }} to ${{ inputs.environment }}"
           pr-title: "ci: promote ${{ inputs.project }} \
-            ${{ inputs.environment }} to ${{ inputs.version }}"
+            ${{ inputs.version }} to ${{ inputs.environment }}"
           pr-body: Automated promotion of validated image
             ${{ inputs.version }} to ${{ inputs.environment }}.
           token: ${{ secrets.GH_PAT }}
