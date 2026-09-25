@@ -194,7 +194,7 @@ jobs:
 
       - name: Promote tag via composite
         id: promote
-        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v5
+        uses: bergconnect/cicd-workflows/.github/actions/bump-image-tag@v9
         with:
           project: ${{ inputs.project }}
           env-name: ${{ inputs.environment }}
