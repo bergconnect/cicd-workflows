@@ -16,7 +16,7 @@ Elke consumer-repo levert:
 - .NET-config: `global.json`, `version.json` per project (unieke major.minor); `global.json` is tevens de enige SDK-versiebron.
 
 Callers pinnen een tag, bv.:
-`uses: bergconnect/cicd-workflows/.github/workflows/cd-template.yml@v1`.
+`uses: bergconnect/cicd-workflows/.github/workflows/promote-template.yml@v11`.
 
 ## Releasen
 
