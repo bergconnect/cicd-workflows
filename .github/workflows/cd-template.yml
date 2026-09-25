@@ -404,9 +404,7 @@ jobs:
           =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] &&
           skopeo inspect
           --tls-verify=false
-          docker://${{ inputs.registry-host }}/${{
-          inputs.repository }}/${{ inputs.dispatch-project }}:${{
-          inputs.dispatch-version }}
+          docker://$REGISTRY/$REPOSITORY/$IMAGE_NAME:$VER
           > /dev/null
 
       - name: Promote prd tag via composite
