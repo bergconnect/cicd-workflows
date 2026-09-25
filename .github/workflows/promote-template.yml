@@ -87,8 +87,8 @@ jobs:
         run: >
           [ -n "$PROJECT" ] ||
           { echo "::error::Lege project-input (dispatch-only)"; exit 1; };
-          case "$TARGET" in dev|prd) ;; *) echo "::error::Onbekende
-          omgeving '$TARGET' (kies dev of prd)"; exit 1;; esac;
+          case "$TARGET" in dev|prd|acc) ;; *) echo "::error::Onbekende
+          omgeving '$TARGET' (kies dev, acc of prd)"; exit 1;; esac;
           [[ "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
           { echo "::error::Versie '$VER' is geen SemVer (x.y.z)"; exit 1; };
           echo "Promote $PROJECT $VER naar $TARGET"
