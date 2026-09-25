@@ -76,6 +76,7 @@ runs:
         export TAG="$VERSION";
         case "$ENV_NAME" in
         dev) VALUES_FILE="values_dev.yaml";;
+        acc) VALUES_FILE="values_acc.yaml";;
         prd) VALUES_FILE="values_prd.yaml";;
         *) echo "::error::Onbekende omgeving '$ENV_NAME'"; exit 1;;
         esac;
@@ -118,6 +119,7 @@ runs:
         '.[$p].chart // empty' .github/projects.json);
         case "$ENV_NAME" in
         dev) VALUES_FILE="values_dev.yaml";;
+        acc) VALUES_FILE="values_acc.yaml";;
         prd) VALUES_FILE="values_prd.yaml";;
         *) echo "::error::Onbekende omgeving '$ENV_NAME'"; exit 1;;
         esac;
