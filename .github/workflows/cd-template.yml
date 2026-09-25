@@ -48,6 +48,13 @@ on:
         required: false
         default: ''
         type: string
+      auto-environments:
+        description: >
+          JSON-lijst van omgevingen die de push-keten automatisch
+          doorloopt (default alleen dev)
+        required: false
+        default: '["dev"]'
+        type: string
     secrets:
       GITEA_TOKEN:
         required: true
@@ -312,8 +319,9 @@ jobs:
       needs.detect.outputs.matrix != '[]' &&
       (      needs.update-tag.result == 'success' ||
       needs.update-tag.result == 'skipped') &&
-      (inputs.dispatch-environment == '' ||
-      inputs.dispatch-environment == 'prd') &&
+      (inputs.dispatch-environment == 'prd' ||
+      (inputs.dispatch-environment == '' &&
+      contains(fromJSON(inputs.auto-environments), 'prd'))) &&
       needs.determine-version.result == 'success'
     timeout-minutes: 10
     permissions:
@@ -388,6 +396,16 @@ jobs:
           then echo "::error::Digest-mismatch na kopie ($SRC_DIGEST vs
           $DST_DIGEST)"; exit 1; fi;
           echo "Gekopieerd + geverifieerd: $DST @$DST_DIGEST"
+
+      - name: Valideer versie in registry
+        if: inputs.dispatch-environment == 'prd'
+        run: >
+          [[ "${{ inputs.dispatch-version }}"
+          =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] &&
+          skopeo inspect
+          --tls-verify=false
+          docker://$REGISTRY/$REPOSITORY/$IMAGE_NAME:$VER
+          > /dev/null
 
       - name: Promote prd tag via composite
         id: promote
