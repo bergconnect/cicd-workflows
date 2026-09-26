@@ -11,12 +11,15 @@ Elke consumer-repo levert:
 - `.github/projects.json` met per project `image_name`, `chart`, `paths`,
   `test-paths` plus `_global` (`select-all`, `ignore`).
 - Code onder `src/`, tests onder `tests/`, charts onder `.infra/`.
-- GitHub Environment `prd` met required reviewers (dev heeft geen gate).
-- Vars `GITEA_USER` (+ registry-host) en secrets `GITEA_TOKEN`, `GH_PAT`.
+- GitHub Environments: `dev` met vars `GITEA_LOCAL` en
+   `GITEA_SOURCE_REPOSITORY`; `acc` en `prd` met vars
+   `GITEA_DST_REGISTRY_HOST` en `GITEA_DST_REPOSITORY`. Configureer required
+   reviewers voor `prd`.
+- Vars `GITEA_USER` en secrets `GITEA_TOKEN`, `GITEA_DST_TOKEN`, `GH_PAT`.
 - .NET-config: `global.json`, `version.json` per project (unieke major.minor); `global.json` is tevens de enige SDK-versiebron.
 
 Callers pinnen een tag, bv.:
-`uses: bergconnect/cicd-workflows/.github/workflows/promote-template.yml@v13`.
+`uses: bergconnect/cicd-workflows/.github/workflows/promote-template.yml@v16`.
 
 ## Releasen
 
@@ -34,5 +37,5 @@ Callers pinnen een tag, bv.:
 
 ## Bekende lint-uitzondering
 
-Twee `uses:`-regels (centrale action-refs) zijn 83 tekens en kunnen niet
+Twee `uses:`-regels (centrale action-refs) zijn 84 tekens en kunnen niet
 vouwen zonder YAML-semantiek te breken — geaccepteerd, niet fixen.
